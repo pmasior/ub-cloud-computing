@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+  database:
+    container_name: ub-cloud-computing-docker-database
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "500M"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${DATABASE_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${DATABASE_PASSWORD}
+    image: mongo
+    networks:
+      - ub-cloud-computing-docker-network
+    restart: on-failure:3
+    volumes:
+      - type: bind
+        source: ./database
+        target: /data/db
+  frontend:
+    build:
+      args:
+        - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+        - DATABASE_URI=${DATABASE_URI}
+        - DATABASE_USERNAME=${DATABASE_USERNAME}
+        - PORT=3000
+      context: ./frontend
+      dockerfile: frontend.prod.Dockerfile
+    container_name: ub-cloud-computing-docker-frontend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "500M"
+        reservations:
+          cpus: "0.25"
+          memory: "250M"
+    environment:
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_URI=${DATABASE_URI}
+      - DATABASE_USERNAME=${DATABASE_USERNAME}
+    networks:
+      - ub-cloud-computing-docker-network
+    restart: on-failure:3
+    ports:
+      - 3000:3000
+      - 3001:3001
+
+networks:
+  ub-cloud-computing-docker-network:
